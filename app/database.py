@@ -1,0 +1,82 @@
+# # # from sqlalchemy import create_engine
+# # # from sqlalchemy.orm import sessionmaker, declarative_base
+# # # DATABASE_URL = "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/sellerops"
+
+# # # engine = create_engine(DATABASE_URL, echo=True)
+
+# # # SessionLocal = sessionmaker(bind=engine)
+
+# # # Base = declarative_base()
+# # # def get_db():
+# # #     db = SessionLocal()
+# # #     try:
+# # #         yield db
+# # #     finally:
+# # #         db.close()
+
+# # from sqlalchemy import create_engine
+# # from sqlalchemy.orm import sessionmaker, declarative_base
+# # DATABASE_URL = "postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/sellerops"
+
+
+# # engine = create_engine(
+# #     DATABASE_URL,
+# #     echo=True,
+# #     pool_pre_ping=True,
+# # )
+
+# # SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# # Base = declarative_base()
+
+
+# from sqlalchemy import create_engine
+# from sqlalchemy.orm import sessionmaker, declarative_base
+# import os
+
+# DATABASE_URL = os.getenv(
+#     "DATABASE_URL", 
+#     "postgresql+psycopg2://postgres:postgres@localhost:5432/sellerops"
+# )
+
+# engine = create_engine(
+#     DATABASE_URL,
+#     echo=True,
+#     pool_pre_ping=True,
+# )
+
+# SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# Base = declarative_base()
+
+# def get_db():
+#     db = SessionLocal()
+#     try:
+#         yield db
+#     finally:
+#         db.close()
+
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
+import os
+
+# Connect to Docker PostgreSQL on localhost:5432
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql+psycopg2://postgres:postgres@127.0.0.1:5433/sellerops"
+)
+
+engine = create_engine(
+    DATABASE_URL,
+    echo=True,
+    pool_pre_ping=True,
+)
+
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
