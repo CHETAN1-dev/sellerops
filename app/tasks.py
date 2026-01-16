@@ -1,7 +1,7 @@
 from datetime import datetime
-from app.celery_app import celery_app
-from app.database import SessionLocal
-from app.models import Job
+from app.celery.celery_app import celery_app
+from app.db.database import SessionLocal
+from app.db.models.models import Job
 
 @celery_app.task(name="app.tasks.process_job")
 def process_job(job_id: int):

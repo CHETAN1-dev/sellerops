@@ -3,6 +3,8 @@ from pathlib import Path
 import shutil
 import uuid
 
+from app.celery.celery_app import celery_app
+
 router = APIRouter(prefix="/uploads", tags=["Uploads"])
 
 UPLOAD_DIR = Path("app/storage/uploads")
@@ -11,22 +13,27 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 @router.post("/csv")
 async def upload_csv(file: UploadFile = File(...)):
-    # 1. Validate file type
+    # 1️⃣ Validate file type
     if not file.filename.endswith(".csv"):
         raise HTTPException(status_code=400, detail="Only CSV files are allowed")
 
-    # 2. Create unique filename
+    # 2️⃣ Create unique filename
     file_id = str(uuid.uuid4())
     file_path = UPLOAD_DIR / f"{file_id}_{file.filename}"
 
-    # 3. Save file to disk
+    # 3️⃣ Save file to disk
     with file_path.open("wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    # 4. Return metadata (future job trigger will go here)
+    # 4️⃣ Send task to Celery (IMPORTANT)
+    task = celery_app.send_task(
+        "process_sales_csv",
+        args=[str(file_path)]
+    )
+
+    # 5️⃣ Response
     return {
-        "message": "CSV uploaded successfully",
+        "message": "CSV uploaded & processing started",
         "file_id": file_id,
-        "filename": file.filename,
-        "path": str(file_path)
+        "task_id": task.id
     }

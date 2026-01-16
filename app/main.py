@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from sqlalchemy import text
-from app.database import engine
-from app.models import Base
+from app.db.database import engine
+from app.db.models.models import Base
 from app.routes import health, jobs, uploads
 
 
