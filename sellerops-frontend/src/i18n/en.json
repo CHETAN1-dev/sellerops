@@ -1,0 +1,68 @@
+{
+  "app": {
+    "name": "SellerOps",
+    "tagline": "Turn your sales data into actionable insights"
+  },
+
+  "landing": {
+    "slides": [
+      {
+        "title": "SellerOps",
+        "subtitle": "Your AI-powered sales intelligence platform"
+      },
+      {
+        "title": "Understand Your Sales.",
+        "subtitle": "Instantly."
+      },
+      {
+        "title": "From Raw CSVs to Insights",
+        "subtitle": "We structure, clean, and prepare your sales data automatically"
+      },
+      {
+        "title": "Ask Questions. Get Answers.",
+        "subtitle": "Chat with AI to uncover trends, revenue drivers, and risks"
+      }
+    ],
+
+    "features": [
+      "Upload CSV sales reports",
+      "Automatic background processing",
+      "AI-powered question answering",
+      "Real-time insights for sellers"
+    ],
+
+    "cta": "Get Started"
+  },
+  "auth": {
+    "title": "Welcome to SellerOps",
+    "subtitle": "Login or create an account to continue",
+    "login": "Login",
+    "register": "Create Account",
+    "email": "Email address",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "forgotPassword": "Forgot password?"
+  },
+
+  "dashboard": {
+    "title": "Dashboard",
+    "upload": "Upload Sales File",
+    "processing": "Processing your data...",
+    "success": "Data processed successfully",
+    "error": "Something went wrong"
+  },
+
+  "chat": {
+    "title": "AI Analyst",
+    "placeholder": "Ask about your sales data...",
+    "emptyState": "Upload data to start asking questions",
+    "thinking": "Analyzing your data..."
+  },
+
+  "common": {
+    "loading": "Loading...",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "close": "Close"
+  }
+}
