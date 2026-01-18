@@ -5,3 +5,10 @@
 html, body {
   @apply bg-bg-light text-text-primary;
 }
+.input {
+  @apply w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500;
+}
+
+.btn-primary {
+  @apply rounded-lg bg-indigo-600 py-2 text-white font-medium hover:bg-indigo-700 transition;
+}

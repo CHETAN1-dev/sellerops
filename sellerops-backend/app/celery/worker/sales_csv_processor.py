@@ -3,7 +3,7 @@ from pathlib import Path
 
 from app.celery.celery_app import celery_app
 from app.db.database import SessionLocal
-from app.db.models.models import Sale
+from app.db.models.sale import Sale
 
 
 

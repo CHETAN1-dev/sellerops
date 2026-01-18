@@ -1,0 +1,6 @@
+{
+    "python.analysis.extraPaths": [
+        "./sellerops-backend",
+        "./sellerops-backend/app/core"
+    ]
+}

@@ -1,38 +1,84 @@
-import { motion } from "framer-motion";
-import { useI18n } from "../../i18n";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
-export default function AuthModal() {
-  const { auth } = useI18n();
+import LoginForm from "./LoginFrom";
+import RegisterForm from "./RegisterForm";
+import OtpForm from "./OtpForm";
+
+import { modalVariants } from "./auth.animations";
+import { shakeVariants } from "../../animations/shake";
+import { validateRegister } from "../../utils/validators";
+
+type AuthStep = "login" | "register" | "otp";
+
+export default function AuthModal({ onClose }: { onClose: () => void }) {
+  const [step, setStep] = useState<AuthStep>("register");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [shouldShake, setShouldShake] = useState(false);
+
+  /**
+   * 🔐 Called ONLY by RegisterForm
+   */
+  const handleRegisterSubmit = (formData: {
+    name: string;
+    email: string;
+    password: string;
+    confirmPassword: string;
+  }) => {
+    const result = validateRegister(formData);
+
+    if (!result.valid) {
+      setErrors(result.errors);
+      setShouldShake(true);
+
+      // reset shake animation
+      setTimeout(() => setShouldShake(false), 400);
+      return;
+    }
+
+    setErrors({});
+    setStep("otp");
+  };
 
   return (
-    <motion.div
-      initial={{ y: "100%", opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      exit={{ y: "100%", opacity: 0 }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
-      className="fixed bottom-0 left-0 right-0 z-50 flex justify-center"
-    >
-      <div className="w-full max-w-md rounded-t-2xl bg-white p-6 shadow-xl">
-        <h2 className="text-xl font-semibold">{auth.title}</h2>
-        <p className="mt-1 text-sm text-text-secondary">
-          {auth.subtitle}
-        </p>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center">
+      <motion.div
+        variants={modalVariants}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
+        className="w-full max-w-md rounded-t-2xl bg-white p-6 sm:rounded-2xl"
+      >
+        <motion.div
+          variants={shakeVariants}
+          animate={shouldShake ? "shake" : "idle"}
+        >
+          <AnimatePresence mode="wait">
+            {step === "login" && (
+              <LoginForm
+                key="login"
+                onRegister={() => setStep("register")}
+              />
+            )}
 
-        <div className="mt-6 space-y-4">
-          <input
-            placeholder={auth.email}
-            className="w-full rounded-lg border px-4 py-3"
-          />
-          <input
-            type="password"
-            placeholder={auth.password}
-            className="w-full rounded-lg border px-4 py-3"
-          />
-          <button className="w-full rounded-lg bg-gradient-to-r from-brand-primary to-brand-secondary py-3 text-white">
-            {auth.login}
-          </button>
-        </div>
-      </div>
-    </motion.div>
+            {step === "register" && (
+              <RegisterForm
+                key="register"
+                errors={errors}
+                onSubmit={handleRegisterSubmit}
+                onLogin={() => setStep("login")}
+              />
+            )}
+
+            {step === "otp" && (
+              <OtpForm
+                key="otp"
+                onSuccess={onClose}
+              />
+            )}
+          </AnimatePresence>
+        </motion.div>
+      </motion.div>
+    </div>
   );
 }
