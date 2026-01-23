@@ -1,116 +1,52 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 
 type Props = {
+  email: string;
   onSuccess: () => void;
 };
 
-export default function OtpForm({ onSuccess }: Props) {
-  const [otp, setOtp] = useState<string[]>(Array(6).fill(""));
-  const [timer, setTimer] = useState(30);
-  const inputsRef = useRef<HTMLInputElement[]>([]);
+export default function OtpForm({ email, onSuccess }: Props) {
+  const [otp, setOtp] = useState("");
 
-  // ⏱ Countdown timer
-  useEffect(() => {
-    if (timer === 0) return;
+  const handleVerify = async () => {
+    const res = await fetch("http://localhost:8000/auth/verify-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, otp }),
+    });
 
-    const interval = setInterval(() => {
-      setTimer(t => t - 1);
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [timer]);
-
-  // 🔢 Handle OTP typing
-  const handleChange = (index: number, value: string) => {
-    if (!/^\d?$/.test(value)) return;
-
-    const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
-
-    if (value && inputsRef.current[index + 1]) {
-      inputsRef.current[index + 1].focus();
+    if (!res.ok) {
+      alert("Invalid OTP");
+      return;
     }
-  };
 
-  // 🔙 Handle backspace
-  const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
-    if (e.key === "Backspace" && !otp[index] && inputsRef.current[index - 1]) {
-      inputsRef.current[index - 1].focus();
-    }
-  };
+    const data = await res.json();
 
-  // ✅ Submit OTP
-  const handleVerify = () => {
-    const code = otp.join("");
-    if (code.length === 6) {
-      // later → API call
-      onSuccess();
-    }
-  };
+    // ✅ SAVE TOKEN
+    localStorage.setItem("access_token", data.access_token);
 
-  // 🔁 Resend OTP
-  const resendOtp = () => {
-    setOtp(Array(6).fill(""));
-    setTimer(30);
-    inputsRef.current[0]?.focus();
+    // ✅ GO TO DASHBOARD
+    onSuccess();
   };
 
   return (
-    <motion.div
-      key="otp"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0 }}
-      className="space-y-6"
-    >
-      <h2 className="text-xl font-semibold text-center">
-        Verify OTP
-      </h2>
+    <motion.div className="space-y-4">
+      <h2 className="text-xl font-semibold">Verify OTP</h2>
 
-      <p className="text-center text-sm text-gray-500">
-        Enter the 6-digit code sent to your email
-      </p>
-
-      {/* OTP boxes */}
-      <div className="flex justify-center gap-2">
-        {otp.map((digit, i) => (
-          <input
-            key={i}
-            ref={el => {
-              if (el) inputsRef.current[i] = el;
-            }}
-            value={digit}
-            onChange={e => handleChange(i, e.target.value)}
-            onKeyDown={e => handleKeyDown(i, e)}
-            maxLength={1}
-            className="h-12 w-10 rounded border text-center text-lg focus:border-indigo-600 focus:outline-none"
-          />
-        ))}
-      </div>
+      <input
+        value={otp}
+        onChange={(e) => setOtp(e.target.value)}
+        className="w-full border p-2 rounded"
+        placeholder="Enter OTP"
+      />
 
       <button
         onClick={handleVerify}
-        className="w-full rounded bg-indigo-600 py-2 text-white"
+        className="w-full bg-indigo-600 text-white py-2 rounded"
       >
         Verify
       </button>
-
-      <div className="text-center text-sm">
-        {timer > 0 ? (
-          <span className="text-gray-400">
-            Resend OTP in {timer}s
-          </span>
-        ) : (
-          <button
-            onClick={resendOtp}
-            className="text-indigo-600 hover:underline"
-          >
-            Resend OTP
-          </button>
-        )}
-      </div>
     </motion.div>
   );
 }

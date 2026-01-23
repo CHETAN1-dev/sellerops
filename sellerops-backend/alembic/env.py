@@ -10,6 +10,7 @@ from app.db.database import Base
 from app.db.models.user import User
 from app.db.models.sale import Sale
 from app.db.models.refresh_token import RefreshToken
+from app.db.models.upload import Upload
 
 
 
