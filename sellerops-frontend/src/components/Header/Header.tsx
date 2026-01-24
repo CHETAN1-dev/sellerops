@@ -3,7 +3,7 @@ import { useMe } from "../../hooks/useMe";
 import Avatar from "./Avatar";
 import ProfileDrawer from "./ProfileDrawer";
 
-export default function DashboardHeader() {
+export default function Header() {
   const [open, setOpen] = useState(false);
   const { user, loading } = useMe();
 
@@ -11,9 +11,7 @@ export default function DashboardHeader() {
 
   return (
     <>
-      <header className="flex items-center justify-between px-4 py-3 border-b">
-        <h1 className="text-lg font-semibold">SellerOps</h1>
-
+      <header className="flex items-center justify-between px-1 py-3 border-b">
         {user && (
           <Avatar
             name={user.name}

@@ -37,7 +37,7 @@ async def upload_csv(
     upload = Upload(
         user_id=user.id,
         file_path=str(file_path),
-        original_filename=file.filename,
+        original_filename =file.filename,
         status="pending",
     )
     db.add(upload)

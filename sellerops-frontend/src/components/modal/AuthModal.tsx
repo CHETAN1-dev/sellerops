@@ -77,7 +77,7 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
               key="otp"
               email={emailForOtp}
               onSuccess={()=> {
-               navigate("/dashboard")
+               navigate("/home")
                 onClose();
               }}
             />

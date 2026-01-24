@@ -9,7 +9,7 @@ class Upload(Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
-    filename = Column(String, nullable=False)
+    original_filename = Column(String, nullable=False)
     file_path = Column(String, nullable=False)
 
     status = Column(String, default="processing")

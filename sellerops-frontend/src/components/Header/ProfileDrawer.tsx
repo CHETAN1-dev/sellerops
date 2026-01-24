@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import Sidebar from "../ui/SideBar";
 
 type Props = {
   open: boolean;
@@ -48,6 +49,7 @@ export default function ProfileDrawer({ open, onClose, user }: Props) {
               </div>
 
               <hr />
+              
 
               <button
                 onClick={logout}
@@ -55,6 +57,7 @@ export default function ProfileDrawer({ open, onClose, user }: Props) {
               >
                 Logout
               </button>
+              <Sidebar/>
             </div>
           </motion.div>
         </>
