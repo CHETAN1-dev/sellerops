@@ -1,5 +1,6 @@
 from fastapi import FastAPI
-from app.routes import auth, uploads
+from app.api.v1 import chats, uploads
+from app.routes import auth
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -19,3 +20,4 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(uploads.router)
+app.include_router(chats.router)

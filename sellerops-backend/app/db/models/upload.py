@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from datetime import datetime
+from sqlalchemy.dialects.postgresql import UUID
 from app.db.database import Base
 
 class Upload(Base):
@@ -22,3 +23,11 @@ class Upload(Base):
         back_populates="upload",
         cascade="all, delete-orphan"
       )
+    
+    chat_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("chats.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+
+    chat = relationship("Chat", back_populates="uploads")

@@ -11,6 +11,9 @@ from app.db.models.user import User
 from app.db.models.sale import Sale
 from app.db.models.refresh_token import RefreshToken
 from app.db.models.upload import Upload
+from app.db.models.chat import Chat
+from app.db.models.chat_message import ChatMessage
+# from app.db.models import *
 
 
 
