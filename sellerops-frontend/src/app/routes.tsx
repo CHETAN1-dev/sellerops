@@ -4,6 +4,9 @@ import Dashboard from "../pages/Landing/Dashboard";
 import ProtectedRoute from "../components/auth/ProtectedRoute";
 import Analytics from "../pages/Analytics/Analytics";
 import Home from "../pages/Home/HomeScreen";
+import ChatLayout from "../pages/Chat/ChatLayout";
+import AppLayout from "../components/layout/AppLayout";
+
 
 export const router = createBrowserRouter([
   {
@@ -27,12 +30,42 @@ export const router = createBrowserRouter([
 
     ),
   },
-  {
-    path: "/home",
-    element:(
+  // {
+  //   path: "/home",
+  //   element:(
+  //     <ProtectedRoute>
+  //     <Home/>
+  //     </ProtectedRoute>
+  //   ),
+  // },
+  // {
+  //   path : "/chat/new",
+  //   element :(
+  //     <ProtectedRoute>
+  //       <ChatLayout/>
+  //     </ProtectedRoute>
+  //   )
+  // }
+
+   {
+    element: (
       <ProtectedRoute>
-      <Home/>
+        <AppLayout />
       </ProtectedRoute>
     ),
-  }
+    children: [
+      {
+        path: "/home",
+        element: <Home />,
+      },
+      {
+        path: "/chat/new",
+        element: <ChatLayout />,
+      },
+      {
+        path: "/chat/:id",
+        element: <ChatLayout />,
+      },
+    ],
+  },
 ]);

@@ -1,4 +1,4 @@
-import DashboardHeader from "../../components/Header/Header";
+
 import UploadCsv from "../../components/ui/UploadCsv";
 import StatCard from "../Analytics/StatCard";
 
@@ -11,9 +11,7 @@ export default function Dashboard() {
   };
   return (
     <div className="min-h-screen bg-gray-50">
-      <DashboardHeader />
-
-      <main className="p-4">
+        <main className="p-4">
         <p className="text-gray-600">
           Upload your sales data to get started.
         </p>

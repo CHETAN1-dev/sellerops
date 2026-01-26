@@ -1,7 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import DashboardHeader from "../../components/Header/Header";
-// import Sidebar from "../../components/ui/SideBar";
-// import ChatLayout from "../../components/Chat/ChatLayout";
+
 
 const chats = [
   { id: "1", title: "January Sales Analysis" },
@@ -18,7 +16,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50 px-8 py-10">
-      <DashboardHeader />
+      
       {/* <ChatLayout/> */}
       
       <div className="mt-10 max-w-2xl">
