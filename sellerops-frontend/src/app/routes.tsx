@@ -30,23 +30,6 @@ export const router = createBrowserRouter([
 
     ),
   },
-  // {
-  //   path: "/home",
-  //   element:(
-  //     <ProtectedRoute>
-  //     <Home/>
-  //     </ProtectedRoute>
-  //   ),
-  // },
-  // {
-  //   path : "/chat/new",
-  //   element :(
-  //     <ProtectedRoute>
-  //       <ChatLayout/>
-  //     </ProtectedRoute>
-  //   )
-  // }
-
    {
     element: (
       <ProtectedRoute>
@@ -63,7 +46,7 @@ export const router = createBrowserRouter([
         element: <ChatLayout />,
       },
       {
-        path: "/chat/:id",
+    path: "/chat/:chatId",
         element: <ChatLayout />,
       },
     ],

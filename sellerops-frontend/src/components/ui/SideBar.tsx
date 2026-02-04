@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { useMe } from "../../hooks/useMe";
 import Avatar from "../Header/Avatar";
 import clsx from "clsx";
+import { useNavigate, useLocation } from "react-router-dom";
+
 
 export default function Sidebar() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useMe();
 
   const [collapsed, setCollapsed] = useState(false);
@@ -41,7 +43,11 @@ export default function Sidebar() {
 
       {/* New Chat */}
       <button
-        onClick={() => navigate("/chat/new")}
+        onClick={() => {
+          if (location.pathname === "/chat/new") return;
+
+          navigate("/chat/new", { replace: true });
+        }}
         className="mx-3 mt-3 mb-2 border border-gray-600 rounded-md px-3 py-2 text-sm hover:bg-gray-700"
       >
         {collapsed ? "+" : "+ New Chat"}
@@ -77,7 +83,7 @@ export default function Sidebar() {
             onClick={() => setMenuOpen((v) => !v)}
             className="border-t border-gray-700 p-3 flex items-center gap-3 cursor-pointer hover:bg-gray-800"
           >
-            <Avatar name={user.name} onClick={() => {}} />
+            <Avatar name={user.name} onClick={() => { }} />
 
             {!collapsed && (
               <div className="text-sm">
