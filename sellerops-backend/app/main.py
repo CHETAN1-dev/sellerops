@@ -1,6 +1,9 @@
 from fastapi import FastAPI
-from app.routes import auth, uploads
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
+
+from app.routes import auth, uploads
 
 
 app = FastAPI(title="SellerOps Backend")
@@ -19,3 +22,14 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(uploads.router)
+
+
+frontend_dist = Path(
+    Path(__file__).resolve().parent.parent / "frontend_dist"
+)
+if frontend_dist.exists():
+    app.mount(
+        "/",
+        StaticFiles(directory=frontend_dist, html=True),
+        name="frontend",
+    )
