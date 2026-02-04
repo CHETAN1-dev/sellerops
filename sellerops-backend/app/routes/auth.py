@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from jose import JWTError
 from sqlalchemy.orm import Session
-
 from app.db.database import SessionLocal
 from app.db.models.user import User
 from app.schemas.auth import LoginRequest, RegisterRequest, TokenResponse
+from app.security import jwt
+from app.security.deps import get_current_user
 from app.security.password import hash_password, verify_password
 from app.security.otp import generate_otp
 from app.core.redis import redis_client
@@ -11,7 +13,7 @@ from app.db.database import get_db
 from app.db.models.user import User
 from app.schemas.auth import VerifyOtpRequest
 from app.services.otp import get_otp, delete_otp
-from app.security.jwt import create_access_token
+from app.security.jwt import ALGORITHM, SECRET_KEY, create_access_token
 from app.db.models.refresh_token import RefreshToken
 from app.security.jwt import create_access_token, create_refresh_token
 from datetime import datetime, timedelta
@@ -87,24 +89,6 @@ def verify_otp(payload: VerifyOtpRequest, db: Session = Depends(get_db)):
 
     return {"message": "Account verified successfully"}
 
-@router.post("/login", response_model=TokenResponse)
-def login(payload: LoginRequest, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == payload.email).first()
-
-    if not user or not verify_password(payload.password, user.password_hash):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-
-    if not user.is_verified:
-        raise HTTPException(status_code=403, detail="Email not verified")
-
-    token = create_access_token(
-        data={"sub": user.email}
-    )
-
-    return {
-        "access_token": token,
-        "token_type": "bearer"
-    }
 
 @router.post("/login", response_model=TokenResponse)
 def login(payload: LoginRequest, db=Depends(get_db)):
@@ -113,7 +97,9 @@ def login(payload: LoginRequest, db=Depends(get_db)):
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    access_token = create_access_token(user.id)
+    access_token = create_access_token(
+        subject=user.email  # 👈 IMPORTANT
+    )
     refresh_token = create_refresh_token()
 
     db.add(
@@ -161,3 +147,12 @@ def logout(token: str, db=Depends(get_db)):
     db.query(RefreshToken).filter(RefreshToken.token == token).delete()
     db.commit()
     return {"message": "Logged out"}
+
+
+@router.get("/me")
+def get_me(current_user: User = Depends(get_current_user)):
+    return {
+        "id": current_user.id,
+        "name": current_user.name,
+        "email": current_user.email,
+    }
