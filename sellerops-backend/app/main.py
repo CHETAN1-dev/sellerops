@@ -1,7 +1,10 @@
 from fastapi import FastAPI
-from app.api.v1 import chats, uploads
-from app.routes import auth
+from app.routes import auth, uploads
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
+
+from app.routes import auth, uploads
 
 
 app = FastAPI(title="SellerOps Backend")
@@ -20,4 +23,3 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(uploads.router)
-app.include_router(chats.router)
