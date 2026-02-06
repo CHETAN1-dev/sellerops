@@ -1,10 +1,9 @@
 from fastapi import FastAPI
-from app.routes import auth, uploads
+from app.routes import auth, llm, uploads
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
-from app.routes import auth, uploads
 
 
 app = FastAPI(title="SellerOps Backend")
@@ -23,6 +22,7 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(uploads.router)
+app.include_router(llm.router)
 
 # app.mount(
 #     "/",
