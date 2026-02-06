@@ -31,7 +31,7 @@ export default function LoginForm({ onRegister }: Props) {
   localStorage.setItem("access_token", data.access_token);
 
   // ✅ REDIRECT
-  navigate("/home");
+  navigate("/home",   { replace: true });
 };
 
   return (

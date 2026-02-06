@@ -23,3 +23,10 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(uploads.router)
+
+# app.mount(
+#     "/",
+#     StaticFiles(directory="frontend_dist", html=True),
+#     name="frontend",
+# )
+#In-Case if you want to run both server on same port , NO CORS-MIDDLEWARE REQUIRED FOR THIS

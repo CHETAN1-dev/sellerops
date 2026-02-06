@@ -10,10 +10,15 @@ type AuthStep = "login" | "register" | "otp";
 const API_BASE_URL = "http://localhost:8000";
 
 export default function AuthModal({ onClose }: { onClose: () => void }) {
+   
   const [step, setStep] = useState<AuthStep>("register");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [emailForOtp, setEmailForOtp] = useState("");
   const navigate = useNavigate();
+  const token = localStorage.getItem("access_token");
+  if (token) return null;
+  console.log("🔥 AuthModal rendered, token =", localStorage.getItem("access_token"));
+
   // 🔑 THIS IS THE IMPORTANT FUNCTION
   const handleRegisterSubmit = async (formData: {
     name: string;

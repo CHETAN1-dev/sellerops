@@ -1,8 +1,8 @@
 FROM node:20-alpine AS frontend-builder
 
 WORKDIR /frontend
-COPY sellerops-frontend/package.json sellerops-frontend/package-lock.json ./
-RUN npm ci
+COPY sellerops-frontend/package.json ./
+RUN npm install
 COPY sellerops-frontend/ .
 RUN npm run build
 
