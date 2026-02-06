@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { createChat, sendMessage } from "../../services/api/chats";
+import { createChat } from "../../services/api/chats";
 
 type Props = {
   chatId: string | null;
+  onSendMessage?: (message: string) => Promise<void>;
 };
 
 type Attachment = {
@@ -11,16 +12,13 @@ type Attachment = {
   status: "UPLOADING" | "DONE" | "ERROR";
 };
 
-export default function ChatInput({ chatId }: Props) {
+export default function ChatInput({ chatId, onSendMessage }: Props) {
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [uploading, setUploading] = useState(false);
   const [text, setText] = useState("");
 
   const navigate = useNavigate();
 
-  /* ---------------------------------- */
-  /* Ensure chat exists (draft → active) */
-  /* ---------------------------------- */
   async function ensureChatExists(): Promise<string> {
     if (chatId) return chatId;
 
@@ -29,28 +27,26 @@ export default function ChatInput({ chatId }: Props) {
     return chat.id;
   }
 
-  /* ---------------- */
-  /* Send text message */
-  /* ---------------- */
   const handleSendMessage = async () => {
-    if (!text.trim()) return;
+    const message = text.trim();
+    if (!message) return;
 
     try {
-      const activeChatId = await ensureChatExists();
-      await sendMessage(activeChatId, text.trim());
+      if (onSendMessage) {
+        await onSendMessage(message);
+      } else {
+        const activeChatId = await ensureChatExists();
+        // TODO: persist chat messages via /chats/:chat_id/messages when this path is re-enabled.
+        void activeChatId;
+      }
 
-      setText(""); // clear input
+      setText("");
     } catch {
       alert("❌ Failed to send message");
     }
   };
 
-  /* ---------------- */
-  /* Upload CSV file  */
-  /* ---------------- */
-  const handleFileUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -82,9 +78,6 @@ export default function ChatInput({ chatId }: Props) {
         name: file.name,
         status: "DONE",
       });
-
-      // 🔥 Later: trigger AI response / refresh messages here
-
     } catch {
       setAttachment({
         name: file.name,
@@ -98,8 +91,6 @@ export default function ChatInput({ chatId }: Props) {
 
   return (
     <div className="border-t border-gray-700 p-4">
-
-      {/* Attachment card */}
       {attachment && (
         <div className="max-w-3xl mx-auto mb-2">
           <div className="flex items-center justify-between bg-[#2F303A] text-gray-200 px-3 py-2 rounded-lg text-sm">
@@ -118,10 +109,7 @@ export default function ChatInput({ chatId }: Props) {
         </div>
       )}
 
-      {/* Input row */}
       <div className="max-w-3xl mx-auto flex items-center gap-3 bg-[#40414F] rounded-xl px-4 py-3">
-
-        {/* Upload */}
         <label className="cursor-pointer text-gray-400 hover:text-white">
           📎
           <input
@@ -133,22 +121,16 @@ export default function ChatInput({ chatId }: Props) {
           />
         </label>
 
-        {/* Text input */}
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") handleSendMessage();
           }}
-          placeholder={
-            uploading
-              ? "Uploading CSV..."
-              : "Ask about your sales data..."
-          }
+          placeholder={uploading ? "Uploading CSV..." : "Ask about your sales data..."}
           className="flex-1 bg-transparent outline-none text-gray-200"
         />
 
-        {/* Send */}
         <button
           onClick={handleSendMessage}
           disabled={!text.trim()}
