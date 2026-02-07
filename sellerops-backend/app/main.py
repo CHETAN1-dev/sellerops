@@ -1,35 +1,29 @@
 from fastapi import FastAPI
-from app.routes import auth, llm
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from pathlib import Path
-from app.api.v1 import chats
-from app.api.v1 import uploads
 
-
+from app.routes import auth, llm
+from app.api.v1 import chats, uploads
 
 app = FastAPI(title="SellerOps Backend")
 
+# --------------------
+# CORS
+# --------------------
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173",   # Vite
+        "http://localhost:5173",
         "http://127.0.0.1:5173",
-    ],  # later restrict to frontend domain
+    ],
     allow_credentials=True,
-    allow_methods=["*"],  # THIS allows OPTIONS
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
+# --------------------
+# Routers
+# --------------------
 app.include_router(auth.router)
 app.include_router(uploads.router)
-app.include_router(llm.router)
 app.include_router(chats.router)
-
-# app.mount(
-#     "/",
-#     StaticFiles(directory="frontend_dist", html=True),
-#     name="frontend",
-# )
-#In-Case if you want to run both server on same port , NO CORS-MIDDLEWARE REQUIRED FOR THIS
+app.include_router(llm.router)

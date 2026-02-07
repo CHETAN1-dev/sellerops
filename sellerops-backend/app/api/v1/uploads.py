@@ -45,6 +45,14 @@ async def upload_csv(
     with file_path.open("wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
+    # Check if this is the first upload for auto chat naming
+    is_first_upload = (
+        db.query(Upload.id)
+        .filter(Upload.chat_id == chat.id)
+        .first()
+        is None
+    )
+
     upload = Upload(
         user_id=user.id,
         chat_id=chat.id,
@@ -56,6 +64,15 @@ async def upload_csv(
     db.add(upload)
     db.flush()
 
+    # Auto chat naming (only once)
+    if is_first_upload and (chat.title or "").strip().lower() in {
+        "",
+        "new chat",
+        "untitled chat",
+    }:
+        chat.title = f"Sales Analysis – {file.filename}"
+
+    # ChatGPT-style optimistic message
     db.add(
         ChatMessage(
             chat_id=chat.id,
@@ -73,6 +90,9 @@ async def upload_csv(
     }
 
 
+# --------------------------------------------------
+# 2️⃣ Explicit processing trigger (celery starts HERE)
+# --------------------------------------------------
 @router.post("/{upload_id}/process", status_code=202)
 def process_csv_upload(
     upload_id: int,
@@ -104,6 +124,9 @@ def process_csv_upload(
     }
 
 
+# --------------------------------------------------
+# 3️⃣ Upload status polling
+# --------------------------------------------------
 @router.get("/{upload_id}/status")
 def get_upload_status(
     upload_id: int,

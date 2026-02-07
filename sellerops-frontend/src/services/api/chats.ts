@@ -39,3 +39,10 @@ export function sendMessage(chatId: string, content: string) {
     body: JSON.stringify({ content }),
   });
 }
+
+
+export function getChat(chatId: string) {
+  return apiRequest<Chat>(`/chats/${chatId}`, {
+    method: "GET",
+  });
+}

@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import clsx from "clsx";
+
 import { useMe } from "../../hooks/useMe";
 import Avatar from "../Header/Avatar";
-import clsx from "clsx";
-import { useNavigate, useLocation } from "react-router-dom";
-
+import { listChats, type Chat } from "../../services/api/chats";
 
 export default function Sidebar() {
   const navigate = useNavigate();
@@ -12,13 +13,40 @@ export default function Sidebar() {
 
   const [collapsed, setCollapsed] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [chats, setChats] = useState<Chat[]>([]);
 
-  // ⏱ auto close after 3s
   useEffect(() => {
     if (!menuOpen) return;
-    const t = setTimeout(() => setMenuOpen(false), 3000);
-    return () => clearTimeout(t);
+    const timeoutId = setTimeout(() => setMenuOpen(false), 3000);
+    return () => clearTimeout(timeoutId);
   }, [menuOpen]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadChats = async () => {
+      try {
+        const chatList = await listChats();
+        if (isMounted) {
+          setChats(chatList);
+        }
+      } catch {
+        if (isMounted) {
+          setChats([]);
+        }
+      }
+    };
+
+    loadChats();
+    const intervalId = window.setInterval(loadChats, 10000);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(intervalId);
+    };
+  }, [location.pathname]);
+
+  const sortedChats = chats;
 
   const logout = () => {
     localStorage.removeItem("access_token");
@@ -33,7 +61,6 @@ export default function Sidebar() {
         collapsed ? "w-16" : "w-64"
       )}
     >
-      {/* Logo */}
       <div
         className="px-4 py-4 text-lg font-semibold border-b border-gray-700 cursor-pointer"
         onClick={() => setCollapsed(!collapsed)}
@@ -41,11 +68,9 @@ export default function Sidebar() {
         {collapsed ? "S" : "SellerOps"}
       </div>
 
-      {/* New Chat */}
       <button
         onClick={() => {
           if (location.pathname === "/chat/new") return;
-
           navigate("/chat/new", { replace: true });
         }}
         className="mx-3 mt-3 mb-2 border border-gray-600 rounded-md px-3 py-2 text-sm hover:bg-gray-700"
@@ -53,17 +78,20 @@ export default function Sidebar() {
         {collapsed ? "+" : "+ New Chat"}
       </button>
 
-      {/* Chat list */}
       <div className="flex-1 overflow-y-auto px-2 space-y-1">
-        <ChatItem title="January Sales" collapsed={collapsed} />
-        <ChatItem title="EU Orders Analysis" collapsed={collapsed} />
-        <ChatItem title="Q4 Revenue" collapsed={collapsed} />
+        {sortedChats.map((chat) => (
+          <ChatItem
+            key={chat.id}
+            title={chat.title}
+            collapsed={collapsed}
+            active={location.pathname === `/chat/${chat.id}`}
+            onClick={() => navigate(`/chat/${chat.id}`)}
+          />
+        ))}
       </div>
 
-      {/* USER SECTION */}
       {user && (
         <div className="relative">
-          {/* dropdown */}
           {menuOpen && !collapsed && (
             <div className="absolute bottom-16 left-3 right-3 bg-[#2a2b2f] rounded-lg shadow-lg p-3 text-sm z-50">
               <p className="font-medium">{user.name}</p>
@@ -78,12 +106,11 @@ export default function Sidebar() {
             </div>
           )}
 
-          {/* user bar */}
           <div
-            onClick={() => setMenuOpen((v) => !v)}
+            onClick={() => setMenuOpen((value) => !value)}
             className="border-t border-gray-700 p-3 flex items-center gap-3 cursor-pointer hover:bg-gray-800"
           >
-            <Avatar name={user.name} onClick={() => { }} />
+            <Avatar name={user.name} onClick={() => {}} />
 
             {!collapsed && (
               <div className="text-sm">
@@ -100,12 +127,22 @@ export default function Sidebar() {
 function ChatItem({
   title,
   collapsed,
+  active,
+  onClick,
 }: {
   title: string;
   collapsed: boolean;
+  active: boolean;
+  onClick: () => void;
 }) {
   return (
-    <div className="px-3 py-2 rounded-md hover:bg-gray-700 cursor-pointer text-sm truncate">
+    <div
+      onClick={onClick}
+      className={clsx(
+        "px-3 py-2 rounded-md cursor-pointer text-sm truncate",
+        active ? "bg-gray-700" : "hover:bg-gray-700"
+      )}
+    >
       {collapsed ? "•" : title}
     </div>
   );

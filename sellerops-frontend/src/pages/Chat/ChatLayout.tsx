@@ -4,7 +4,8 @@ import { useParams } from "react-router-dom";
 import ChatHeader from "../../components/Chat/ChatHeader";
 import ChatInput from "../../components/Chat/ChatInput";
 import ChatMessages from "../../components/Chat/ChatMessage";
-import { getMessages } from "../../services/api/chats";
+
+import { getChat, getMessages } from "../../services/api/chats";
 import { sendLLMMessage } from "../../services/api/llm";
 
 type Message = {
@@ -29,20 +30,31 @@ export default function ChatLayout() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const [thinkingText, setThinkingText] = useState<string | null>(null);
+  const [chatTitle, setChatTitle] = useState("Sales Assistant");
 
   const refreshMessages = async () => {
     if (!chatId) {
       setMessages([]);
       return;
     }
-
     const nextMessages = await getMessages(chatId);
     setMessages(nextMessages);
   };
 
   useEffect(() => {
+    if (!chatId) {
+      setChatTitle("Sales Assistant");
+      setMessages([]);
+      return;
+    }
+
     setLoading(true);
-    refreshMessages().finally(() => setLoading(false));
+    Promise.all([getChat(chatId), getMessages(chatId)])
+      .then(([chat, nextMessages]) => {
+        setChatTitle(chat.title);
+        setMessages(nextMessages);
+      })
+      .finally(() => setLoading(false));
   }, [chatId]);
 
   async function handleSendMessage(message: string) {
@@ -52,25 +64,40 @@ export default function ChatLayout() {
 
     try {
       const llmResponse = await sendLLMMessage(message);
-      setMessages((prev) => [...prev, makeMessage("assistant", llmResponse.response)]);
+      setMessages((prev) => [
+        ...prev,
+        makeMessage("assistant", llmResponse.response),
+      ]);
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : "Failed to fetch response from assistant.";
-      setMessages((prev) => [...prev, makeMessage("assistant", `Error: ${errorMessage}`)]);
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch response from assistant.";
+      setMessages((prev) => [
+        ...prev,
+        makeMessage("assistant", `Error: ${errorMessage}`),
+      ]);
     } finally {
       setLoading(false);
     }
   }
 
-  const handleSetThinking = (thinking: boolean, text = "🔄 Structuring your data...") => {
+  const handleSetThinking = (
+    thinking: boolean,
+    text = "🔄 Structuring your data..."
+  ) => {
     setThinkingText(thinking ? text : null);
   };
 
   if (!chatId) {
     return (
       <div className="h-full flex flex-col bg-[#343541]">
-        <ChatHeader />
-        <ChatMessages messages={messages} loading={loading} thinkingText={thinkingText} />
+        <ChatHeader title="Sales Assistant" />
+        <ChatMessages
+          messages={messages}
+          loading={loading}
+          thinkingText={thinkingText}
+        />
         <ChatInput
           chatId={null}
           onSendMessage={handleSendMessage}
@@ -83,8 +110,12 @@ export default function ChatLayout() {
 
   return (
     <div className="flex flex-col h-full bg-[#343541]">
-      <ChatHeader />
-      <ChatMessages messages={messages} loading={loading} thinkingText={thinkingText} />
+      <ChatHeader title={chatTitle} />
+      <ChatMessages
+        messages={messages}
+        loading={loading}
+        thinkingText={thinkingText}
+      />
       <ChatInput
         chatId={chatId}
         onSendMessage={handleSendMessage}

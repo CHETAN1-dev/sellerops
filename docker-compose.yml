@@ -62,6 +62,8 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/sellerops
       REDIS_URL: redis://redis:6379/0
+    env_file:
+      - .env
 
   celery_worker:
     build: .
