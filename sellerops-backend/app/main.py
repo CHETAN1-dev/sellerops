@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from app.routes import auth, llm, uploads
+from app.api.v1 import chats
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
@@ -22,6 +23,7 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(uploads.router)
+app.include_router(chats.router)
 app.include_router(llm.router)
 
 # app.mount(

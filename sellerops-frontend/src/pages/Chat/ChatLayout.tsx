@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import ChatHeader from "../../components/Chat/ChatHeader";
 import ChatInput from "../../components/Chat/ChatInput";
 import ChatMessages from "../../components/Chat/ChatMessage";
-import { apiRequest } from "../../services/api";
+import { getChat, getMessages } from "../../services/api/chats";
 import { sendLLMMessage } from "../../services/api/llm";
 
 type Message = {
@@ -28,18 +28,32 @@ export default function ChatLayout() {
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
+  const [thinkingText, setThinkingText] = useState<string | null>(null);
+  const [chatTitle, setChatTitle] = useState("Sales Assistant");
 
-  useEffect(() => {
+  const refreshMessages = async () => {
     if (!chatId) {
       setMessages([]);
       return;
     }
 
+    const nextMessages = await getMessages(chatId);
+    setMessages(nextMessages);
+  };
+
+  useEffect(() => {
+    if (!chatId) {
+      setChatTitle("Sales Assistant");
+      setMessages([]);
+      return;
+    }
+
     setLoading(true);
-    apiRequest<Message[]>(`/chats/${chatId}/messages`, {
-      method: "GET",
-    })
-      .then(setMessages)
+    Promise.all([getChat(chatId), getMessages(chatId)])
+      .then(([chat, nextMessages]) => {
+        setChatTitle(chat.title);
+        setMessages(nextMessages);
+      })
       .finally(() => setLoading(false));
   }, [chatId]);
 
@@ -60,21 +74,35 @@ export default function ChatLayout() {
     }
   }
 
+  const handleSetThinking = (thinking: boolean, text = "🔄 Structuring your data...") => {
+    setThinkingText(thinking ? text : null);
+  };
+
   if (!chatId) {
     return (
       <div className="h-full flex flex-col bg-[#343541]">
-        <ChatHeader />
-        <ChatMessages messages={messages} loading={loading} />
-        <ChatInput chatId={null} onSendMessage={handleSendMessage} />
+        <ChatHeader title="Sales Assistant" />
+        <ChatMessages messages={messages} loading={loading} thinkingText={thinkingText} />
+        <ChatInput
+          chatId={null}
+          onSendMessage={handleSendMessage}
+          onRefreshMessages={refreshMessages}
+          onSetThinking={handleSetThinking}
+        />
       </div>
     );
   }
 
   return (
     <div className="flex flex-col h-full bg-[#343541]">
-      <ChatHeader />
-      <ChatMessages messages={messages} loading={loading} />
-      <ChatInput chatId={chatId} onSendMessage={handleSendMessage} />
+      <ChatHeader title={chatTitle} />
+      <ChatMessages messages={messages} loading={loading} thinkingText={thinkingText} />
+      <ChatInput
+        chatId={chatId}
+        onSendMessage={handleSendMessage}
+        onRefreshMessages={refreshMessages}
+        onSetThinking={handleSetThinking}
+      />
     </div>
   );
 }

@@ -27,11 +27,9 @@ async def upload_csv(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    # 1️⃣ Validate file
-    if not file.filename.endswith(".csv"):
+    if not file.filename or not file.filename.endswith(".csv"):
         raise HTTPException(status_code=400, detail="Only CSV files are allowed")
 
-    # 2️⃣ Validate chat belongs to user
     chat = (
         db.query(Chat)
         .filter(Chat.id == chat_id, Chat.user_id == user.id)
@@ -41,45 +39,90 @@ async def upload_csv(
     if not chat:
         raise HTTPException(status_code=404, detail="Chat not found")
 
-    # 3️⃣ Save file to disk
     file_uuid = str(uuid.uuid4())
     file_path = UPLOAD_DIR / f"{file_uuid}_{file.filename}"
 
     with file_path.open("wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    # 4️⃣ Create upload record (linked to chat)
+    is_first_upload = db.query(Upload.id).filter(Upload.chat_id == chat.id).first() is None
+
     upload = Upload(
         user_id=user.id,
         chat_id=chat.id,
         file_path=str(file_path),
         original_filename=file.filename,
-        status="processing",
+        status="pending",
     )
 
     db.add(upload)
-    db.commit()
-    db.refresh(upload)
+    db.flush()
 
-    # 5️⃣ Add system message to chat
-    system_message = ChatMessage(
-        chat_id=chat.id,
-        role="system",
-        content=f"📄 Uploaded `{file.filename}`. Processing started.",
+    if is_first_upload and (chat.title or "").strip().lower() in {"", "new chat", "untitled chat"}:
+        chat.title = f"Sales Analysis – {file.filename}"
+
+    db.add(
+        ChatMessage(
+            chat_id=chat.id,
+            role="user",
+            content=f"📄 Uploading {file.filename}...",
+        )
     )
 
-    db.add(system_message)
     db.commit()
-
-    # 6️⃣ Trigger Celery task
-    task = celery_app.send_task(
-        "process_sales_csv",
-        args=[upload.id],
-    )
 
     return {
-        "message": "CSV uploaded and processing started",
+        "message": "CSV uploaded",
         "upload_id": upload.id,
         "chat_id": chat.id,
+    }
+
+
+@router.post("/{upload_id}/process", status_code=202)
+def process_csv_upload(
+    upload_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    upload = (
+        db.query(Upload)
+        .join(Chat, Chat.id == Upload.chat_id)
+        .filter(Upload.id == upload_id, Chat.user_id == user.id)
+        .first()
+    )
+
+    if not upload:
+        raise HTTPException(status_code=404, detail="Upload not found")
+
+    if upload.status == "processing":
+        raise HTTPException(status_code=400, detail="Upload is already processing")
+
+    if upload.status == "completed":
+        raise HTTPException(status_code=400, detail="Upload already processed")
+
+    task = celery_app.send_task("process_sales_csv", args=[upload.id])
+
+    return {
+        "message": "CSV processing started",
+        "upload_id": upload.id,
         "task_id": task.id,
     }
+
+
+@router.get("/{upload_id}/status")
+def get_upload_status(
+    upload_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    upload = (
+        db.query(Upload)
+        .join(Chat, Chat.id == Upload.chat_id)
+        .filter(Upload.id == upload_id, Chat.user_id == user.id)
+        .first()
+    )
+
+    if not upload:
+        raise HTTPException(status_code=404, detail="Upload not found")
+
+    return {"upload_id": upload.id, "status": upload.status}
